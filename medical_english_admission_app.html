@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>醫護英文教學網頁 - Admission & Take History from Patient</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        medical: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .flip-card {
+            perspective: 1000px;
+        }
+        .flip-card-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            backface-visibility: hidden;
+        }
+        .flip-card-back {
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
+
+    <!-- Header Navigation -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-emerald-600 text-white p-2.5 rounded-xl shadow-md">
+                        <i class="fa-solid fa-hospital-user text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold text-slate-800 leading-tight">醫護英文：Admission</h1>
+                        <p class="text-xs text-slate-500">Unit 4: Take History from Patient (詢問病史)</p>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <nav class="hidden md:flex space-x-1" id="desktopNav">
+                    <button onclick="switchTab('student-info')" class="nav-btn px-4 py-2 text-sm font-medium rounded-lg transition-colors text-emerald-600 bg-emerald-50" data-tab="student-info">
+                        <i class="fa-solid fa-id-card mr-1.5"></i> 學生報到
+                    </button>
+                    <button onclick="switchTab('study-mode')" class="nav-btn px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" data-tab="study-mode">
+                        <i class="fa-solid fa-clipboard-user mr-1.5"></i> 病史詢問學習
+                    </button>
+                    <button onclick="switchTab('matching-game')" class="nav-btn px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" data-tab="matching-game">
+                        <i class="fa-solid fa-gamepad mr-1.5"></i> 配對遊戲測驗
+                    </button>
+                    <button onclick="switchTab('teacher-settings')" class="nav-btn px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" data-tab="teacher-settings">
+                        <i class="fa-solid fa-gear mr-1.5"></i> 教師雲端設定
+                    </button>
+                </nav>
+
+                <!-- Student Status Pill -->
+                <div id="studentBadge" class="hidden sm:flex items-center bg-slate-100 text-slate-700 px-3 py-1.5 rounded-full text-xs font-semibold">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
+                    <span id="badgeStudentName">未登入</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Navigation bar -->
+        <div class="md:hidden flex border-t border-slate-100 bg-slate-50 justify-around p-2 text-xs">
+            <button onclick="switchTab('student-info')" class="mobile-nav-btn flex flex-col items-center py-1 text-emerald-600" data-tab="student-info">
+                <i class="fa-solid fa-id-card text-base"></i>
+                <span>報到</span>
+            </button>
+            <button onclick="switchTab('study-mode')" class="mobile-nav-btn flex flex-col items-center py-1 text-slate-600" data-tab="study-mode">
+                <i class="fa-solid fa-clipboard-user text-base"></i>
+                <span>學習</span>
+            </button>
+            <button onclick="switchTab('matching-game')" class="mobile-nav-btn flex flex-col items-center py-1 text-slate-600" data-tab="matching-game">
+                <i class="fa-solid fa-gamepad text-base"></i>
+                <span>測驗遊戲</span>
+            </button>
+            <button onclick="switchTab('teacher-settings')" class="mobile-nav-btn flex flex-col items-center py-1 text-slate-600" data-tab="teacher-settings">
+                <i class="fa-solid fa-gear text-base"></i>
+                <span>設定</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- TAB 1: STUDENT INFO FORM -->
+        <section id="student-info" class="tab-content block">
+            <div class="max-w-xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+                <div class="bg-gradient-to-r from-emerald-600 to-teal-700 p-6 text-white text-center">
+                    <i class="fa-solid fa-user-nurse text-4xl mb-3 opacity-90"></i>
+                    <h2 class="text-2xl font-bold">Admission 測驗學生登入</h2>
+                    <p class="text-emerald-100 text-sm mt-1">請填寫個人資料以開始「Take history from patient」測驗</p>
+                </div>
+                
+                <form id="infoForm" onsubmit="handleFormSubmit(event)" class="p-6 sm:p-8 space-y-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1" for="studentName">
+                            <i class="fa-solid fa-user text-emerald-600 mr-1.5"></i> 學生姓名 <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="studentName" required placeholder="例如：林小美" 
+                            class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1" for="department">
+                            <i class="fa-solid fa-graduation-cap text-emerald-600 mr-1.5"></i> 科系 <span class="text-red-500">*</span>
+                        </label>
+                        <select id="department" required class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-white">
+                            <option value="">-- 請選擇科系 --</option>
+                            <option value="老人服務事業管理系">老人服務事業管理系</option>
+                            <option value="護理系">護理系 (Nursing)</option>
+                            <option value="醫事檢驗生物技術系">醫檢系 (Medical Laboratory)</option>
+                            <option value="其他醫護相關科系">其他醫護科系</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1" for="studentId">
+                            <i class="fa-solid fa-address-card text-emerald-600 mr-1.5"></i> 學號 <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="studentId" required placeholder="例如：11100123" 
+                            class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
+                    </div>
+
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center space-x-2">
+                        <span>儲存資料並開始課堂學習</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- TAB 2: STUDY MODE -->
+        <section id="study-mode" class="tab-content hidden space-y-8">
+            <!-- Pronunciation Highlight Card -->
+            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 shadow-sm">
+                <h3 class="font-bold text-amber-900 text-lg flex items-center gap-2 mb-2">
+                    <i class="fa-solid fa-ear-listen text-amber-600"></i>
+                    易混淆發音與字彙辨析 (Vocabulary Phonetics)
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+                    <div onclick="speakText('ward')" class="bg-white p-3.5 rounded-xl border border-amber-200 cursor-pointer hover:bg-amber-100 transition">
+                        <div class="font-bold text-emerald-700 text-lg">Ward /wɔːd/</div>
+                        <div class="text-xs text-slate-600">【名詞】病房, 病室 (Hospital Ward)</div>
+                    </div>
+                    <div onclick="speakText('word')" class="bg-white p-3.5 rounded-xl border border-amber-200 cursor-pointer hover:bg-amber-100 transition">
+                        <div class="font-bold text-slate-700 text-lg">Word /wɜːd/</div>
+                        <div class="text-xs text-slate-600">【名詞】字, 詞 (Language unit)</div>
+                    </div>
+                    <div onclick="speakText('world')" class="bg-white p-3.5 rounded-xl border border-amber-200 cursor-pointer hover:bg-amber-100 transition">
+                        <div class="font-bold text-slate-700 text-lg">World /wɜːld/</div>
+                        <div class="text-xs text-slate-600">【名詞】世界, 地球 (The Earth)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Chronic Diseases & Symptoms Grid -->
+            <div>
+                <h3 class="text-lg font-bold text-slate-800 mb-4 border-l-4 border-emerald-600 pl-3">1. 常見疾病與症狀詞彙 (Chronic Diseases & Conditions)</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4" id="diseaseVocabGrid">
+                    <!-- Dynamic Generation via JS -->
+                </div>
+            </div>
+
+            <!-- Admission Patient History Questions -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <h3 class="text-lg font-bold text-slate-800 mb-4 border-l-4 border-emerald-600 pl-3">2. 入院病史詢問問答與句型 (Take History Questions)</h3>
+                <div class="space-y-4" id="historyQuestionsContainer">
+                    <!-- Questions populated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: MATCHING GAME & TEST -->
+        <section id="matching-game" class="tab-content hidden space-y-6">
+            <!-- Game Banner / Control bar -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-puzzle-piece text-amber-500"></i>
+                        Admission 圖片與動作配對遊戲測驗
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-1">請將「病況/動作圖示」與正確的「英文病史問題或專有名詞」進行配對！</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-center bg-slate-50 border border-slate-200 px-4 py-2 rounded-xl">
+                        <span class="block text-xs text-slate-400 font-semibold">花費時間</span>
+                        <span id="gameTimer" class="font-mono text-lg font-bold text-emerald-600">00:00</span>
+                    </div>
+                    <div class="text-center bg-slate-50 border border-slate-200 px-4 py-2 rounded-xl">
+                        <span class="block text-xs text-slate-400 font-semibold">剩餘配對</span>
+                        <span id="pairsLeft" class="font-mono text-lg font-bold text-amber-600">8</span>
+                    </div>
+                    <button onclick="startNewGame()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all shadow">
+                        <i class="fa-solid fa-rotate-right mr-1"></i> 重新開始
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card Grid container -->
+            <div id="gameBoard" class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <!-- Game cards dynamically populated here -->
+            </div>
+
+            <!-- Quiz Result Modal Container (Hidden initially) -->
+            <div id="resultModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 text-center transform transition-all">
+                    <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-inner">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-800">測驗完成！</h3>
+                    <p class="text-slate-500 text-sm mt-1">成績已自動紀錄至 "Take history from patient" 資料表</p>
+
+                    <div class="bg-slate-50 rounded-2xl p-4 my-6 border border-slate-100 space-y-2 text-left text-sm">
+                        <div class="flex justify-between border-b border-slate-200 pb-2">
+                            <span class="text-slate-500">學生姓名:</span>
+                            <span id="resName" class="font-semibold text-slate-800">--</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-200 pb-2">
+                            <span class="text-slate-500">科系 / 學號:</span>
+                            <span id="resInfo" class="font-semibold text-slate-800">--</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-200 pb-2">
+                            <span class="text-slate-500">測驗總花費時間:</span>
+                            <span id="resTime" class="font-bold text-emerald-600">--</span>
+                        </div>
+                        <div class="flex justify-between items-center pt-1">
+                            <span class="text-slate-500">評定得分:</span>
+                            <span id="resScore" class="text-2xl font-extrabold text-emerald-600">100 分</span>
+                        </div>
+                    </div>
+
+                    <!-- Sync Status -->
+                    <div id="syncStatus" class="mb-6 p-3 rounded-xl bg-blue-50 text-blue-700 text-xs flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-spinner fa-spin"></i> 正在傳送成績至老師 Google 雲端硬碟...
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button onclick="closeResultModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-3 rounded-xl transition">
+                            關閉視窗
+                        </button>
+                        <button onclick="startNewGame(); closeResultModal();" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow-lg">
+                            再挑戰一次
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: TEACHER & CLOUD SETTINGS -->
+        <section id="teacher-settings" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2 mb-2">
+                    <i class="fa-solid fa-cloud-arrow-up text-emerald-600"></i>
+                    老師 Google 雲端數據資料同步設定
+                </h2>
+                <p class="text-sm text-slate-600 leading-relaxed">
+                    本教學系統支援將學生的「Take history from patient 測試成績資料」自動同步寫入老師的 **Google 試算表 (Google Sheets)**。
+                </p>
+
+                <!-- Script URL Setting Input -->
+                <div class="mt-6 bg-slate-50 p-5 rounded-xl border border-slate-200">
+                    <label class="block text-sm font-semibold text-slate-700 mb-2" for="scriptUrl">
+                        Google Apps Script Web App URL (網路應用程式網址)
+                    </label>
+                    <div class="flex gap-2">
+                        <input type="url" id="scriptUrl" placeholder="https://script.google.com/macros/s/.../exec" 
+                            class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <button onclick="saveScriptUrl()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-medium text-sm transition">
+                            儲存網址
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-2">網址會儲存在本機瀏覽器中，學生進行測驗後將直接上傳資料。</p>
+                </div>
+
+                <!-- Google Apps Script Guide Instructions -->
+                <div class="mt-6 border-t border-slate-100 pt-6">
+                    <h3 class="font-bold text-slate-800 text-md mb-3 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-info text-amber-500"></i> 如何建立 Google Apps Script 自動寫入 "Take history from patient" 成績表？
+                    </h3>
+                    <ol class="list-decimal list-inside text-sm text-slate-600 space-y-2">
+                        <li>開啟新的 <a href="https://sheets.google.com" target="_blank" class="text-emerald-600 underline">Google 試算表</a>，將試算表分頁標籤命名為 <strong>Take history from patient</strong>。</li>
+                        <li>於試算表中點選頂部選單 <strong>「擴充功能」 -> 「Apps Script」</strong>。</li>
+                        <li>將預設代碼清空，貼上以下代碼：</li>
+                    </ol>
+
+                    <!-- Code Snippet Box -->
+                    <div class="relative bg-slate-900 text-slate-100 p-4 rounded-xl mt-3 text-xs font-mono overflow-x-auto">
+                        <pre><code>function doPost(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Take history from patient") || SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var data = JSON.parse(e.postData.contents);
+  
+  // 若為第一筆資料，自動設定標頭
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(["測驗時間", "學生姓名", "科系", "學號", "耗時(秒)", "得分", "測驗主題"]);
+  }
+  
+  sheet.appendRow([
+    new Date(),
+    data.name,
+    data.department,
+    data.studentId,
+    data.timeSpent,
+    data.score,
+    "Take history from patient"
+  ]);
+  
+  return ContentService.createTextOutput(JSON.stringify({"result": "success"}))
+                       .setMimeType(ContentService.MimeType.JSON);
+}</code></pre>
+                    </div>
+
+                    <ol start="4" class="list-decimal list-inside text-sm text-slate-600 space-y-2 mt-4">
+                        <li>點選右上角 <strong>「部署」 -> 「新增部署」</strong>。</li>
+                        <li>種類選擇 <strong>「Web 應用程式」</strong>，將「誰有權存取」改為 <strong>「任何人 (Anyone)」</strong>。</li>
+                        <li>點選部署授權後，複製產生的 <strong>Web App URL</strong>，並貼回上方欄位即完成設定！</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Export Local Records CSV Feature -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-md">Take history from patient 本機成績紀錄備份</h3>
+                        <p class="text-xs text-slate-500">即使未設定雲端 API，本系統亦會在瀏覽器本機儲存測驗紀錄。</p>
+                    </div>
+                    <button onclick="downloadCSV()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs px-4 py-2.5 rounded-xl font-medium transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-csv"></i> 下載 CSV 報表
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-600">
+                        <thead class="bg-slate-50 text-slate-700 uppercase font-bold border-b border-slate-200">
+                            <tr>
+                                <th class="p-3">時間</th>
+                                <th class="p-3">姓名</th>
+                                <th class="p-3">科系</th>
+                                <th class="p-3">學號</th>
+                                <th class="p-3">耗時</th>
+                                <th class="p-3">得分</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recordsTableBody">
+                            <tr>
+                                <td colspan="6" class="p-4 text-center text-slate-400">尚無測驗紀錄</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400 mt-auto">
+        <p>醫護英文課程教學軟體 &copy; 2026 Admission: Take history from patient Unit</p>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Vocabulary for Admission & Chronic Diseases
+        const DISEASE_VOCAB = [
+            { en: 'Asthma', zh: '氣喘', icon: 'fa-lungs-virus' },
+            { en: 'Hypertension', zh: '高血壓', icon: 'fa-heart-circle-bolt' },
+            { en: 'Diabetes (DM)', zh: '糖尿病 (Diabetes Mellitus)', icon: 'fa-cube' },
+            { en: 'Hemophilia', zh: '血友病', icon: 'fa-droplet' },
+            { en: 'Cancer', zh: '癌症', icon: 'fa-ribbon' },
+            { en: 'Epilepsy', zh: '癲癇', icon: 'fa-brain' },
+            { en: 'Mental illness', zh: '精神疾病', icon: 'fa-head-side-virus' },
+            { en: 'Allergies', zh: '過敏', icon: 'fa-hand-dots' },
+            { en: 'Surgery', zh: '手術 / 外科', icon: 'fa-scalpel' },
+            { en: 'Ward', zh: '病房', icon: 'fa-bed-pulse' }
+        ];
+
+        // Admission Patient History Taking Questions (Page 4 & 5 of Course Handout)
+        const HISTORY_QUESTIONS = [
+            {
+                q: "1. Highest Education Level",
+                en: "What was the highest level of education you completed?",
+                zh: "您完成的最高學歷是什麼？"
+            },
+            {
+                q: "2. Medication History (6 Months)",
+                en: "Within the last six months have you taken any medicine? If so, what kind and what for?",
+                zh: "在過去六個月內您有服用任何藥物嗎？有的話是哪種？治療什麼的？"
+            },
+            {
+                q: "3. Hospital Admission History",
+                en: "Have you ever been admitted to a hospital? If so, when and what for?",
+                zh: "您曾經住院過嗎？有的話，是什麼時候？因為什麼原因？"
+            },
+            {
+                q: "4. Surgical History",
+                en: "Have you ever had surgery? If so, when and what was your diagnosis?",
+                zh: "您曾做過手術嗎？有的話，是什麼時候？當時診斷為何？"
+            },
+            {
+                q: "5. Allergy Assessment",
+                en: "Do you have any allergies? Are you allergic to any medicines or foods?",
+                zh: "您有任何過敏嗎？您是否對藥物或食物過敏？"
+            },
+            {
+                q: "6. Smoking History",
+                en: "Do you smoke? If so, how many cigarettes a day? How long have you been smoking?",
+                zh: "您是否有抽菸？一天抽多少菸？抽菸有多久了？"
+            },
+            {
+                q: "7. Drinking History",
+                en: "Do you drink any alcoholic beverages? If so, how often?",
+                zh: "您是否會喝酒？喝的頻率/量有多少？"
+            },
+            {
+                q: "8. Chronic Diseases Screening",
+                en: "Have you ever had asthma? Hypertension? Diabetes? Hemophilia? Cancer? Epilepsy? Mental illness? Or any other diseases?",
+                zh: "您有無氣喘？高血壓？糖尿病？血友病？癌症？癲癇？精神病？或是其他疾病？"
+            }
+        ];
+
+        // Game Match Items Pool
+        const MATCHING_ITEMS = [
+            { id: 'Asthma', en: 'Asthma (氣喘)', icon: 'fa-lungs-virus', zh: '氣喘症狀' },
+            { id: 'Hypertension', en: 'Hypertension (高血壓)', icon: 'fa-heart-circle-bolt', zh: '高血壓' },
+            { id: 'Diabetes', en: 'Diabetes (糖尿病)', icon: 'fa-cube', zh: '血糖疾病' },
+            { id: 'Hemophilia', en: 'Hemophilia (血友病)', icon: 'fa-droplet', zh: '凝血異常' },
+            { id: 'Cancer', en: 'Cancer (癌症)', icon: 'fa-ribbon', zh: '腫瘤疾病' },
+            { id: 'Epilepsy', en: 'Epilepsy (癲癇)', icon: 'fa-brain', zh: '神經放電' },
+            { id: 'Allergies', en: 'Do you have any allergies?', icon: 'fa-hand-dots', zh: '詢問過敏史' },
+            { id: 'Smoking', en: 'Do you smoke?', icon: 'fa-smoking', zh: '詢問抽菸史' },
+            { id: 'Drinking', en: 'Do you drink alcohol?', icon: 'fa-wine-glass', zh: '詢問飲酒習慣' },
+            { id: 'Surgery', en: 'Have you ever had surgery?', icon: 'fa-scalpel', zh: '詢問手術史' }
+        ];
+
+        // App State Management
+        let currentUser = null;
+        let gameCards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let gameTimerInterval = null;
+        let secondsElapsed = 0;
+        let testRecords = [];
+
+        // Initialize App
+        window.onload = function() {
+            renderStudyVocab();
+            renderHistoryQuestions();
+            loadSavedUser();
+            loadScriptUrl();
+            loadLocalRecords();
+        };
+
+        // Navigation Tabs Handling
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+
+            // Update Desktop Nav styles
+            document.querySelectorAll('#desktopNav .nav-btn').forEach(btn => {
+                if (btn.getAttribute('data-tab') === tabId) {
+                    btn.className = 'nav-btn px-4 py-2 text-sm font-medium rounded-lg transition-colors text-emerald-600 bg-emerald-50';
+                } else {
+                    btn.className = 'nav-btn px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors';
+                }
+            });
+
+            // If entering game tab, check user profile & start
+            if (tabId === 'matching-game') {
+                if (!currentUser) {
+                    alert('請先填寫學生個人資料（姓名、科系、學號）以記錄測驗成績！');
+                    switchTab('student-info');
+                    return;
+                }
+                if (gameCards.length === 0 || matchedPairs === 8) {
+                    startNewGame();
+                }
+            }
+        }
+
+        // Student Form Submission
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('studentName').value.trim();
+            const dept = document.getElementById('department').value;
+            const id = document.getElementById('studentId').value.trim();
+
+            if (!name || !dept || !id) {
+                alert('請完整填寫所有欄位！');
+                return;
+            }
+
+            currentUser = { name, department: dept, studentId: id };
+            localStorage.setItem('med_english_student', JSON.stringify(currentUser));
+            updateStudentBadge();
+
+            alert(`歡迎 ${currentUser.name} 同學！資料已儲存。`);
+            switchTab('study-mode');
+        }
+
+        function loadSavedUser() {
+            const saved = localStorage.getItem('med_english_student');
+            if (saved) {
+                currentUser = JSON.parse(saved);
+                document.getElementById('studentName').value = currentUser.name || '';
+                document.getElementById('department').value = currentUser.department || '';
+                document.getElementById('studentId').value = currentUser.studentId || '';
+                updateStudentBadge();
+            }
+        }
+
+        function updateStudentBadge() {
+            if (currentUser) {
+                document.getElementById('badgeStudentName').innerText = `${currentUser.name} (${currentUser.department})`;
+                document.getElementById('studentBadge').classList.remove('hidden');
+            }
+        }
+
+        // Text To Speech Helper
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Render Study Section Data
+        function renderStudyVocab() {
+            const container = document.getElementById('diseaseVocabGrid');
+            container.innerHTML = DISEASE_VOCAB.map(v => `
+                <div onclick="speakText('${v.en}')" class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center space-x-3 group">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
+                        <i class="fa-solid ${v.icon}"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-slate-800 text-sm flex items-center gap-1">
+                            ${v.en} <i class="fa-solid fa-volume-high text-slate-300 text-xs"></i>
+                        </div>
+                        <div class="text-xs text-slate-500">${v.zh}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderHistoryQuestions() {
+            const container = document.getElementById('historyQuestionsContainer');
+            container.innerHTML = HISTORY_QUESTIONS.map(q => `
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-1.5">
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs font-bold text-emerald-600 uppercase tracking-wide">${q.q}</span>
+                        <button onclick="speakText('${q.en.replace(/'/g, "\\'")}')" class="text-slate-400 hover:text-emerald-600 text-xs p-1">
+                            <i class="fa-solid fa-volume-high"></i> 聽發音
+                        </button>
+                    </div>
+                    <p class="font-semibold text-slate-800 text-sm leading-relaxed">${q.en}</p>
+                    <p class="text-xs text-slate-500">${q.zh}</p>
+                </div>
+            `).join('');
+        }
+
+        // MATCHING GAME LOGIC
+        function startNewGame() {
+            // Select 8 items randomly from pool
+            const selected = MATCHING_ITEMS.sort(() => 0.5 - Math.random()).slice(0, 8);
+
+            // Create pairs: One Card with Icon/Image, One Card with English Question/Vocab
+            let cards = [];
+            selected.forEach((item, idx) => {
+                // Card A: Visual Icon
+                cards.push({
+                    pairId: idx,
+                    type: 'icon',
+                    content: item.icon,
+                    zh: item.zh,
+                    isFlipped: false,
+                    isMatched: false
+                });
+                // Card B: Text
+                cards.push({
+                    pairId: idx,
+                    type: 'text',
+                    content: item.en,
+                    zh: item.zh,
+                    isFlipped: false,
+                    isMatched: false
+                });
+            });
+
+            // Shuffle all cards
+            gameCards = cards.sort(() => 0.5 - Math.random());
+            flippedCards = [];
+            matchedPairs = 0;
+            document.getElementById('pairsLeft').innerText = 8;
+
+            // Timer setup
+            clearInterval(gameTimerInterval);
+            secondsElapsed = 0;
+            document.getElementById('gameTimer').innerText = '00:00';
+            gameTimerInterval = setInterval(() => {
+                secondsElapsed++;
+                const mins = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+                const secs = String(secondsElapsed % 60).padStart(2, '0');
+                document.getElementById('gameTimer').innerText = `${mins}:${secs}`;
+            }, 1000);
+
+            renderGameBoard();
+        }
+
+        function renderGameBoard() {
+            const board = document.getElementById('gameBoard');
+            board.innerHTML = gameCards.map((card, index) => {
+                const flippedClass = card.isFlipped || card.isMatched ? 'flipped' : '';
+                const matchedClass = card.isMatched ? 'opacity-40 cursor-default' : 'cursor-pointer';
+
+                let cardFrontContent = '';
+                if (card.type === 'icon') {
+                    cardFrontContent = `<div class="text-center"><i class="fa-solid ${card.content} text-4xl text-emerald-600"></i></div>`;
+                } else {
+                    cardFrontContent = `
+                        <div class="text-center px-2">
+                            <span class="font-bold text-slate-800 text-xs sm:text-sm block">${card.content}</span>
+                            <span class="text-xs text-slate-400 block mt-1">${card.zh}</span>
+                        </div>`;
+                }
+
+                return `
+                    <div class="flip-card h-32 ${flippedClass} ${matchedClass}" onclick="handleCardClick(${index})">
+                        <div class="flip-card-inner relative w-full h-full duration-500">
+                            <!-- Card Back (Cover) -->
+                            <div class="flip-card-front absolute inset-0 bg-gradient-to-br from-emerald-800 to-teal-900 rounded-2xl flex items-center justify-center text-white border-2 border-emerald-700 shadow-md">
+                                <i class="fa-solid fa-notes-medical text-2xl opacity-40"></i>
+                            </div>
+                            <!-- Card Front (Revealed) -->
+                            <div class="flip-card-back absolute inset-0 bg-white rounded-2xl border-2 border-emerald-500 shadow-lg flex items-center justify-center p-3">
+                                ${cardFrontContent}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function handleCardClick(index) {
+            const card = gameCards[index];
+            if (card.isFlipped || card.isMatched || flippedCards.length >= 2) return;
+
+            card.isFlipped = true;
+            flippedCards.push({ index, card });
+            renderGameBoard();
+
+            if (flippedCards.length === 2) {
+                const [first, second] = flippedCards;
+
+                // Check match
+                if (first.card.pairId === second.card.pairId && first.card.type !== second.card.type) {
+                    // Match found
+                    setTimeout(() => {
+                        first.card.isMatched = true;
+                        second.card.isMatched = true;
+                        matchedPairs++;
+                        document.getElementById('pairsLeft').innerText = 8 - matchedPairs;
+                        flippedCards = [];
+                        renderGameBoard();
+
+                        if (matchedPairs === 8) {
+                            handleGameCompletion();
+                        }
+                    }, 400);
+                } else {
+                    // Not a match, flip back
+                    setTimeout(() => {
+                        first.card.isFlipped = false;
+                        second.card.isFlipped = false;
+                        flippedCards = [];
+                        renderGameBoard();
+                    }, 1000);
+                }
+            }
+        }
+
+        // Game Completed Event
+        function handleGameCompletion() {
+            clearInterval(gameTimerInterval);
+            const timeStr = document.getElementById('gameTimer').innerText;
+
+            // Fill Result Modal
+            document.getElementById('resName').innerText = currentUser.name;
+            document.getElementById('resInfo').innerText = `${currentUser.department} / ${currentUser.studentId}`;
+            document.getElementById('resTime').innerText = `${timeStr} (${secondsElapsed} 秒)`;
+            document.getElementById('resultModal').classList.remove('hidden');
+
+            // Save Record Locally & Send to Cloud
+            const record = {
+                timestamp: new Date().toLocaleString(),
+                name: currentUser.name,
+                department: currentUser.department,
+                studentId: currentUser.studentId,
+                timeSpent: secondsElapsed,
+                score: 100
+            };
+
+            saveRecordLocally(record);
+            uploadResultToGoogleDrive(record);
+        }
+
+        function closeResultModal() {
+            document.getElementById('resultModal').classList.add('hidden');
+        }
+
+        // Save & Sync Data Operations
+        function saveRecordLocally(record) {
+            testRecords.unshift(record);
+            localStorage.setItem('med_english_history_records', JSON.stringify(testRecords));
+            renderRecordsTable();
+        }
+
+        function loadLocalRecords() {
+            const saved = localStorage.getItem('med_english_history_records');
+            if (saved) {
+                testRecords = JSON.parse(saved);
+                renderRecordsTable();
+            }
+        }
+
+        function renderRecordsTable() {
+            const tbody = document.getElementById('recordsTableBody');
+            if (testRecords.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">尚無測驗紀錄</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = testRecords.map(r => `
+                <tr class="border-b border-slate-100 hover:bg-slate-50">
+                    <td class="p-3">${r.timestamp}</td>
+                    <td class="p-3 font-semibold text-slate-800">${r.name}</td>
+                    <td class="p-3">${r.department}</td>
+                    <td class="p-3">${r.studentId}</td>
+                    <td class="p-3 font-mono">${r.timeSpent} 秒</td>
+                    <td class="p-3 font-bold text-emerald-600">${r.score}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Send Test Results to Teacher's Google Apps Script
+        function uploadResultToGoogleDrive(record) {
+            const scriptUrl = localStorage.getItem('med_english_script_url');
+            const syncStatus = document.getElementById('syncStatus');
+
+            if (!scriptUrl) {
+                syncStatus.className = "mb-6 p-3 rounded-xl bg-amber-50 text-amber-700 text-xs flex items-center justify-center gap-2";
+                syncStatus.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> 尚未設定老師 Google 雲端網址 (已存為本機備份)`;
+                return;
+            }
+
+            syncStatus.className = "mb-6 p-3 rounded-xl bg-blue-50 text-blue-700 text-xs flex items-center justify-center gap-2";
+            syncStatus.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 正在上傳成績至老師 "Take history from patient" 資料表...`;
+
+            fetch(scriptUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(record)
+            }).then(() => {
+                syncStatus.className = "mb-6 p-3 rounded-xl bg-emerald-50 text-emerald-700 text-xs flex items-center justify-center gap-2";
+                syncStatus.innerHTML = `<i class="fa-solid fa-circle-check text-base"></i> 成績已順利同步至老師 Google 雲端 "Take history from patient"！`;
+            }).catch(err => {
+                console.error(err);
+                syncStatus.className = "mb-6 p-3 rounded-xl bg-red-50 text-red-700 text-xs flex items-center justify-center gap-2";
+                syncStatus.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> 同步失敗，成績已存至本機備份。`;
+            });
+        }
+
+        function saveScriptUrl() {
+            const url = document.getElementById('scriptUrl').value.trim();
+            if (url) {
+                localStorage.setItem('med_english_script_url', url);
+                alert('Google Web App 網址已儲存！測驗完成後將自動上傳資料。');
+            } else {
+                localStorage.removeItem('med_english_script_url');
+                alert('已清除雲端網址。');
+            }
+        }
+
+        function loadScriptUrl() {
+            const savedUrl = localStorage.getItem('med_english_script_url');
+            if (savedUrl) {
+                document.getElementById('scriptUrl').value = savedUrl;
+            }
+        }
+
+        // Export local records to CSV
+        function downloadCSV() {
+            if (testRecords.length === 0) {
+                alert('目前沒有可匯出的紀錄！');
+                return;
+            }
+            let csvContent = "\uFEFF"; // UTF-8 BOM
+            csvContent += "時間,姓名,科系,學號,測驗花費時間(秒),得分,主題\n";
+
+            testRecords.forEach(r => {
+                csvContent += `"${r.timestamp}","${r.name}","${r.department}","${r.studentId}",${r.timeSpent},${r.score},"Take history from patient"\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Take_History_Quiz_Records_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
